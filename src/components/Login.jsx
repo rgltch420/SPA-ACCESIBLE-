@@ -1,41 +1,48 @@
 import { Fragment, useRef, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
+import {registerUser, loginUser, loginWithGoogle} from "../../firebase/auth";
+import { useState, useEffect, useRef, Fragment } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "firebase-admin";
 
-export default function Login({ onClose }) {
-  const [mode, setMode] = useState("login"); 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const firstInputRef = useRef(null);
 
-  useEffect(() => {
-    firstInputRef.current?.focus();
-  }, [mode]);
-
-  const handleSubmit = (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError("Introduce un correo válido");
-      return;
-    }
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
-      return;
-    }
-    if (mode === "register" && password !== confirmPassword) {
-      setError("Las contraseñas no coinciden");
-      return;
-    }
+    try {
+      if (mode === "login") {
+        await signInWithEmailAndPassword(auth, email, password);
+        alert("✅ Inicio de sesión exitoso");
+      } else {
+        if (password !== confirmPassword) {
+          setError("Las contraseñas no coinciden");
+          return;
+        }
+        await createUserWithEmailAndPassword(auth, email, password);
+        alert("🎉 Cuenta creada con éxito");
+      }
 
-    alert(mode === "login" ? "¡Has iniciado sesión!" : "¡Cuenta creada!");
-    setEmail("");
-    setPassword("");
-    setConfirmPassword("");
-    onClose();
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithPopup(auth, provider);
+      alert("✅ Sesión iniciada con Google");
+      onClose();
+    } catch (err) {
+      console.error(err);
+      setError("Error con Google: " + err.message);
+    }
   };
 
   return (
@@ -127,8 +134,25 @@ export default function Login({ onClose }) {
               </div>
 
           
+              {/* <button
+                type="button"
+                className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded py-2 text-gray-500 hover:text-blue-600 hover:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"
+              >
+                <span className="w-5 h-5">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 640 640"
+                    fill="currentColor"
+                  >
+                    <path d="M564 325.8C564 467.3 467.1 568 324 568C186.8 568 76 457.2 76 320C76 182.8 186.8 72 324 72C390.8 72 447 96.5 490.3 136.9L422.8 201.8C334.5 116.6 170.3 180.6 170.3 320C170.3 406.5 239.4 476.6 324 476.6C422.2 476.6 459 406.2 464.8 369.7L324 369.7L324 284.4L560.1 284.4C562.4 297.1 564 309.3 564 325.8z"/>
+                  </svg>
+                </span>
+                Iniciar sesión con Google
+              </button> */}
+
               <button
                 type="button"
+                onClick={handleGoogleLogin}
                 className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded py-2 text-gray-500 hover:text-blue-600 hover:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"
               >
                 <span className="w-5 h-5">

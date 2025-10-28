@@ -1,0 +1,5 @@
+[
+  { "id": 1, "name": "Cemento gris", "price": 25000, "unit": "bulto" },
+  { "id": 2, "name": "Arena fina", "price": 80000, "unit": "m³" },
+  { "id": 3, "name": "Varilla 3/8", "price": 12000, "unit": "unidad" }
+]
