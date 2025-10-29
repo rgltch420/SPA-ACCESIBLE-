@@ -1,11 +1,16 @@
 import admin from "firebase-admin";
-import { createRequire, CreateRequire } from "module";
-const require = createRequire (import.meta.url);
+import { createRequire } from "module";
 
-const serviceAccount = require ("./arqosfirebas.json");
+const require = createRequire(import.meta.url);
+
+// Tu archivo de Service Account
+const serviceAccount = require("./arqosfirebas.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
+
+// 🔹 Exportamos Firestore
+export const db = admin.firestore();
 
 export default admin;

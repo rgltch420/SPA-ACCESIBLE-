@@ -1,1 +1,9 @@
-[]
+{
+  "userId": "UID del usuario",
+  "name": "Nombre del proyecto",
+  "items": [
+    { "id": 1, "name": "Cemento gris", "price": 25000, "unit": "bulto", "quantity": 2 },
+    { "id": 2, "name": "Arena fina", "price": 80000, "unit": "m³", "quantity": 1 }
+  ],
+  "createdAt": "timestamp"
+}

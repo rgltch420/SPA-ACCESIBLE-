@@ -1,33 +1,51 @@
-import fs from "fs";
-import path from "path";
+import admin from "../config/firebaseAdmin.js";
+const db = admin.firestore();
+const budgetsRef = db.collection("budgets");
 
-const budgetsPath = path.resolve("./models/budgets.json");
-
-export const getBudgets = (req, res) => {
-  const data = fs.readFileSync(budgetsPath, "utf-8");
-  const budgets = JSON.parse(data);
-  res.json(budgets);
-};
-
-export const createBudget = (req, res) => {
-  const { userId, items } = req.body;
-
-  if (!userId || !items) {
-    return res.status(400).json({ message: "Faltan datos" });
+export async function getBudgets(req, res) {
+  try {
+    const userId = req.user.uid;
+    const snapshot = await budgetsRef.where("userId", "==", userId).get();
+    const budgets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json(budgets);
+  } catch (err) {
+    res.status(500).json({ message: "Error al obtener presupuestos", error: err });
   }
+}
 
-  const data = fs.readFileSync(budgetsPath, "utf-8");
-  const budgets = JSON.parse(data);
+export async function createBudget(req, res) {
+  try {
+    const errors = req.errors; // express-validator los coloca aquí si los configuras
+    if (errors && errors.length) return res.status(400).json({ errors });
 
-  const newBudget = {
-    id: budgets.length + 1,
-    userId,
-    items,
-    createdAt: new Date().toISOString(),
-  };
+    const userId = req.user.uid;
+    const data = req.body;
 
-  budgets.push(newBudget);
-  fs.writeFileSync(budgetsPath, JSON.stringify(budgets, null, 2));
+    const newBudget = { ...data, userId, createdAt: new Date().toISOString() };
+    const docRef = await budgetsRef.add(newBudget);
+    res.status(201).json({ id: docRef.id, ...newBudget });
+  } catch (err) {
+    res.status(500).json({ message: "Error al crear presupuesto", error: err });
+  }
+}
 
-  res.status(201).json(newBudget);
-};
+export async function updateBudget(req, res) {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    await budgetsRef.doc(id).update(data);
+    res.json({ message: "Presupuesto actualizado" });
+  } catch (err) {
+    res.status(500).json({ message: "Error al actualizar presupuesto", error: err });
+  }
+}
+
+export async function deleteBudget(req, res) {
+  try {
+    const { id } = req.params;
+    await budgetsRef.doc(id).delete();
+    res.json({ message: "Presupuesto eliminado" });
+  } catch (err) {
+    res.status(500).json({ message: "Error al eliminar presupuesto", error: err });
+  }
+}

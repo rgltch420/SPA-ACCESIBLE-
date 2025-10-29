@@ -1,20 +1,16 @@
 import admin from "../config/firebaseAdmin.js";
 
-export async function verifyToken(req, res, next) {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Token no proporcionado" });
-  }
-
-  const token = authHeader.split(" ")[1];
-
+export const verifyToken = async (req, res, next) => {
   try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    req.user = decodedToken;
+    const header = req.headers.authorization;
+    if (!header) throw new Error("No token");
+
+    const token = header.split(" ")[1];
+    const decoded = await admin.auth().verifyIdToken(token);
+
+    req.user = decoded;
     next();
-  } catch (error) {
-    console.error("Error verificando token:", error);
-    res.status(403).json({ message: "Token inválido o expirado" });
+  } catch (err) {
+    res.status(401).json({ message: "Token inválido", error: err.message });
   }
-}
+};
